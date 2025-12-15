@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đường Đến Di Sản - Khám Phá Văn Hóa Việt</title>
-    
-    <!-- 1. CẤU HÌNH GIAO DIỆN (Tailwind CSS) -->
+    <title>Đường Đến Di Sản - Boardgame Văn Hóa Việt</title>
+
+    <!-- React -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script>
         tailwind.config = {
@@ -22,36 +29,74 @@
                     },
                     backgroundImage: {
                         'pattern-bamboo': "url('https://www.transparenttextures.com/patterns/bamboo.png')",
-                        'gradient-heritage': "linear-gradient(135deg, #d97706 0%, #92400e 100%)",
+                    },
+                    animation: {
+                        'cart-bounce': 'cartBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    },
+                    keyframes: {
+                        cartBounce: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.2)' },
+                        }
                     }
                 }
             }
         }
     </script>
 
-    <!-- 2. CSS DỰ PHÒNG & ANIMATION -->
+    <!-- Custom CSS -->
     <style>
-        body { font-family: sans-serif; line-height: 1.5; color: #333; margin: 0; background-color: #FDFBF7; }
+        body { font-family: 'Inter', sans-serif; line-height: 1.5; color: #333; margin: 0; background-color: #FDFBF7; }
         img { max-width: 100%; height: auto; }
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap');
+        /* ===== SLOT REEL FIX ===== */
+        .reel-viewport { 
+            height: 150px;
+            overflow: hidden; 
+            border-radius: 12px;
+            position: relative;
+            background: linear-gradient(
+                to bottom,
+                #1c1917 0%,
+                #2a2421 50%,
+                #1c1917 100%
+            );
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
 
-        /* Animations */
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(217, 119, 6, 0.1); }
-        .cinematic-shadow { box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5); }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Typing animation */
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        .animate-bounce-dot { animation: bounce 0.6s infinite alternate; }
+        .reel-item {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            background-image: linear-gradient(
+                rgba(255, 255, 255, 0.08),
+                rgba(0, 0, 0, 0.25)
+            );
+        }
+
+        .reel-indicator {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 6px;
+            border-top: 2px solid #FFD700;
+            border-bottom: 2px solid #FFD700;
+            transform: translateY(-50%);
+            z-index: 20;
+            box-shadow: 0 0 10px #FFD700;
+            pointer-events: none;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
     </style>
-    
-    <!-- 3. THƯ VIỆN XỬ LÝ (React) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
     <div id="root"></div>
@@ -69,289 +114,697 @@
             X: (p) => <Icon {...p} d={<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>} />,
             Bag: (p) => <Icon {...p} d={<><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></>} />,
             Play: (p) => <Icon {...p} d={<><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></>} />,
-            Refresh: (p) => <Icon {...p} d={<><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>} />,
             Sparkles: (p) => <Icon {...p} d={<><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></>} />,
-            Phone: (p) => <Icon {...p} d={<><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></>} />,
             CheckCircle: (p) => <Icon {...p} d={<><path d="M22 11.08V12a10 10 0 1 1-5.93-8.8"/><polyline points="22 4 12 14.01 9 11.01"/></>} />,
-            Send: (p) => <Icon {...p} d={<><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></>} />,
-            User: (p) => <Icon {...p} d={<><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>} />,
-            Mail: (p) => <Icon {...p} d={<><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></>} />,
             Star: (p) => <Icon {...p} d={<><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>} />,
             ArrowRight: (p) => <Icon {...p} d={<><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></>} />,
-            ArrowLeft: (p) => <Icon {...p} d={<><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></>} />
+            ArrowLeft: (p) => <Icon {...p} d={<><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></>} />,
+            Users: (p) => <Icon {...p} d={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></>} />,
+            Tower: (p) => <Icon {...p} d={<><path d="M12 2l-8 4v16h16V6l-8-4z"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="4" y1="10" x2="20" y2="10"/></>} />,
+            Book: (p) => <Icon {...p} d={<><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></>} />,
+            Gamepad: (p) => <Icon {...p} d={<><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></>} />,
+            Send: (p) => <Icon {...p} d={<><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></>} />
         };
+
+        // --- DATA NHÂN VẬT ---
+        const CHARACTERS = [
+            { id: 1, name: "Ông Bụt", bio: "Nhân vật hiền hậu trong cổ tích, biểu tượng của sự cứu rỗi.", role: "Trợ Giúp", desc: "Hồi sinh người thua. Nếu họ thắng vòng sau, Bụt nhận thêm 1 khối.", color: "bg-blue-100 text-blue-800" },
+            { id: 2, name: "Mai An Tiêm", bio: "Mai An Tiêm là nhân vật truyền thuyết Việt Nam, nổi tiếng trong Sự tích dưa hấu.Ông tượng trưng cho ý chí tự lực, cần cù và niềm tin vào lao động.", role: "Cá Cược", desc: "Mai An Tiêm: là nhân vật gieo lên hạt giống, Mai An Tiêm được chọn 1 người chơi, nếu người chơi đó thắng 3 lần thì Mai An Tiêm sẽ được 2 hình khối", color: "bg-stone-200 text-stone-800" },
+            { id: 3, name: "Cô Tấm", bio: "Hình mẫu người phụ nữ Việt Nam: nết na, thùy mị và mạnh mẽ.", role: "Ưu Tiên", desc: "Được chọn chủ đề. Phải liệt kê số từ +1. Hoàn thành nhận thêm 2 khối.", color: "bg-pink-100 text-pink-800" },
+            { id: 4, name: "Thánh Gióng", bio: "Biểu tượng sức mạnh phi thường chống giặc ngoại xâm của dân tộc.", role: "Sức Mạnh", desc: "Bỏ qua vòng đấu, chỉ đấu tay đôi với người thắng cuối cùng. Thắng +2 khối, Thua -2 khối.", color: "bg-red-100 text-red-800" },
+            { id: 5, name: "Chằn Tinh", bio: "Yêu quái hung dữ trong truyện Thạch Sanh, đại diện cho cái ác.", role: "Hủy Diệt", desc: "Chọn một người chơi khác, người đó sẽ thua ngay lập tức trong vòng chơi đó.", color: "bg-purple-100 text-purple-800" },
+            { id: 6, name: "Chàng Khoai", bio: "Anh chàng hiền lành, thật thà trong sự tích Cây Tre Trăm Đốt.", role: "Hợp Tác", desc: "Ghép nhóm với 1 người khác chơi chung. Nhóm thắng mỗi người +1 khối, thua mỗi người -1 khối.", color: "bg-amber-100 text-amber-800" },
+            { id: 7, name: "Sơn Tinh", bio: "Vị thần núi Tản Viên, tượng trưng cho sức mạnh chinh phục thiên nhiên.", role: "Thống Trị", desc: "Thắng 2 vòng liên tiếp: Được thu từ MỖI người chơi khác 1 khối.", color: "bg-green-100 text-green-800" },
+            { id: 8, name: "Thủy Tinh", bio: "Vị thần nước, biểu tượng cho sức mạnh dữ dội của bão lũ.", role: "Bão Tố", desc: "Thắng 2 vòng liên tiếp: TỪNG người chơi còn lại bị thu hồi 1 khối.", color: "bg-cyan-100 text-cyan-800" }
+        ];
+
+        // --- COMPONENTS ---
         
-        // --- BỘ TỪ ĐIỂN VÀ HÀM XỬ LÝ (FREE - KHÔNG DÙNG AI) ---
+        // Component Slot Reel mới thay thế GameWheel
+        const SlotReel = ({ data, resultIndex, isSpinning, label, size = '150px' }) => {
+            const itemHeight = 50; // Chiều cao cố định của mỗi item
+            const repetitions = 20; // Lặp lại item 20 lần để tạo hiệu ứng cuộn vô tận
 
-        // Từ điển đáp án (đã chuẩn hóa: chữ thường, không dấu)
-        const DICTIONARY = {
-            "Ẩm thực 3 miền": ["phở", "bún chả", "bánh mì", "bánh xèo", "bún bò huế", "mì quảng", "hủ tiếu", "gỏi cuốn", "nem lụi", "chả cá lã vọng", "cao lầu"],
-            "Lễ hội dân gian": ["hội lim", "chùa hương", "tết nguyên đán", "giỗ tổ hùng vương", "festival huế", "nghinh ông", "trung thu", "cầu mưa", "chọi trâu"],
-            "Anh hùng dân tộc": ["vua hùng", "hai bà trưng", "lý thường kiệt", "trần hưng đạo", "lê lợi", "quang trung", "hồ chí minh", "võ nguyên giáp", "phạm ngũ lão", "nguyễn trãi"],
-            "Địa danh di sản": ["vịnh hạ long", "phố cổ hội an", "thánh địa mỹ sơn", "quần thể cố đô huế", "vườn quốc gia phong nha - kẻ bàng", "hoàng thành thăng long", "cố đô hoa lư", "phố cổ hà nội"],
-            "Nhạc cụ truyền thống": ["đàn bầu", "đàn tranh", "đàn nguyệt", "đàn nhị", "sáo trúc", "trống đồng", "cồng chiêng", "t'rưng", "đàn tỳ bà", "đàn tam"],
-            "Làng nghề thủ công": ["gốm bát tràng", "lụa vạn phúc", "đúc đồng đại bái", "tranh đông hồ", "thêu ren văn lâm", "đan lát", "khảm trai", "mộc kim bồng"]
-        };
+            // Tạo mảng items (dữ liệu nhân đôi)
+            const items = Array.from({ length: repetitions }, (_, repIndex) => 
+                data.map((item, itemIndex) => ({
+                    ...item,
+                    uniqueId: `${label}-${repIndex}-${itemIndex}`,
+                    colorClass: item.color,
+                    displayText: item.name || item.count,
+                    colorHex: item.colorHex || '#333333' // Dùng màu hex cho background reel item
+                }))
+            ).flat();
 
-        // Hàm chuẩn hóa văn bản (loại bỏ dấu và chuyển chữ thường)
-        const normalizeText = (text) => {
-            return text.toLowerCase()
-                       .normalize("NFD")
-                       .replace(/[\u0300-\u036f]/g, "") 
-                       .replace(/[^a-z0-9\s-]/g, "") // Loại bỏ các ký tự đặc biệt khác trừ khoảng trắng và gạch ngang
-                       .trim();
-        };
-
-        // --- GAME ARENA COMPONENT ---
-        const GameArena = () => {
-            const [gameState, setGameState] = useState('idle');
-            const [challenge, setChallenge] = useState({ topic: '', count: 0 });
-            const [userAnswer, setUserAnswer] = useState("");
-            // Lưu trữ kết quả kiểm tra
-            const [feedbackResult, setFeedbackResult] = useState({ message: '', correctCount: 0, requiredCount: 0, correctAnswersFound: [] });
-
-            const topics = Object.keys(DICTIONARY);
-
-            const spinWheel = () => {
-                setGameState('spinning');
-                setChallenge({ topic: '...', count: '?' });
-                setUserAnswer("");
-                setFeedbackResult({ message: '', correctCount: 0, requiredCount: 0, correctAnswersFound: [] });
-                
-                setTimeout(() => {
-                    setChallenge({
-                        topic: topics[Math.floor(Math.random() * topics.length)],
-                        count: Math.floor(Math.random() * 3) + 3 
-                    });
-                    setGameState('solving');
-                }, 1500);
-            };
-
-            const submitAnswer = () => {
-                const topicKey = challenge.topic;
-                const requiredCount = challenge.count;
-                
-                // Tách câu trả lời của người dùng bằng dấu phẩy hoặc xuống dòng
-                const rawAnswers = userAnswer.split(/[,\n]/).map(s => s.trim()).filter(s => s.length > 0);
-                
-                // Chuẩn hóa và lấy các câu trả lời duy nhất của người dùng
-                const normalizedUserAnswers = new Set(rawAnswers.map(normalizeText));
-                const normalizedCorrectAnswers = DICTIONARY[topicKey] || [];
-                
-                let correctCount = 0;
-                let correctList = [];
-                
-                normalizedUserAnswers.forEach(userAns => {
-                    // Kiểm tra xem câu trả lời đã chuẩn hóa có trong từ điển chuẩn hóa không
-                    if (normalizedCorrectAnswers.some(correct => normalizeText(correct) === userAns)) {
-                        correctCount++;
-                        // Thêm câu trả lời gốc (từ từ điển) vào danh sách kết quả để hiển thị đẹp hơn
-                        const originalCorrect = normalizedCorrectAnswers.find(item => normalizeText(item) === userAns);
-                        if (originalCorrect) {
-                             correctList.push(originalCorrect.charAt(0).toUpperCase() + originalCorrect.slice(1));
-                        }
-                    }
-                });
-
-                // Set feedback message
-                let feedbackMessage;
-                
-                if (correctCount >= requiredCount) {
-                    feedbackMessage = `Xuất sắc! Con đã tìm được ${correctCount} câu trả lời chính xác, vượt qua thử thách ${requiredCount} câu. Ta ban cho con một viên gạch vàng!`;
-                } else if (correctCount > 0) {
-                    feedbackMessage = `Khá lắm! Con tìm được ${correctCount} câu đúng, nhưng vẫn cần thêm ${requiredCount - correctCount} câu nữa để hoàn thành nhiệm vụ. Đừng nản chí!`;
-                } else {
-                    feedbackMessage = `Rất tiếc! Con chưa tìm được đáp án nào chính xác. Hãy quay lại và thử thách một chủ đề khác nhé!`;
-                }
-                
-                setFeedbackResult({
-                    message: feedbackMessage,
-                    correctCount: correctCount,
-                    requiredCount: requiredCount,
-                    correctAnswersFound: correctList
-                });
-
-                setGameState('feedback');
-            };
+            // Tính toán vị trí Y cuối cùng để item kết quả nằm giữa viewport (150px)
+            const targetRep = 8; // Đích đến là lần lặp thứ 8 (đảm bảo cuộn đủ dài)
+            const targetIndex = targetRep * data.length + resultIndex;
             
-            // Dữ liệu cho phần phản hồi
-            const isSuccess = feedbackResult.correctCount >= feedbackResult.requiredCount;
-            const iconClass = isSuccess ? "text-green-600" : "text-amber-600";
-            const bgClass = isSuccess ? "bg-green-100" : "bg-amber-100";
+            // Offset để căn giữa: (Chiều cao Viewport / 2) - (Chiều cao Item / 2)
+            const centerOffset = (150 / 2) - (itemHeight / 2); // 75 - 25 = 50
 
+            // Vị trí Y cuối cùng: (Index đích * Chiều cao Item) - Offset căn giữa
+            const finalY = targetIndex * itemHeight - centerOffset; 
+
+            // Offset khi đang quay (Chỉ để cuộn lên trên)
+            const spinningY = (items.length - 1) * itemHeight;
 
             return (
-                <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-amber-100 flex flex-col md:flex-row min-h-[500px]">
-                    <div className="md:w-1/3 bg-stone-900 text-amber-50 p-8 flex flex-col items-center justify-center relative overflow-hidden">
-                         <div className="absolute inset-0 opacity-10 bg-contain bg-no-repeat bg-center bg-[url('https://upload.wikimedia.org/wikipedia/commons/2/21/Vietnam_location_map.svg')] filter invert"></div>
-                         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/bamboo.png')]"></div>
-                        
-                        <div className="relative z-10 text-center">
-                            <h3 className="text-2xl font-serif font-bold mb-6 text-amber-500">Vòng Quay Di Sản</h3>
-                            
-                            <div className={`w-48 h-48 rounded-full border-4 border-amber-600 flex items-center justify-center bg-stone-800 shadow-inner mb-8 transition-all duration-700 ${gameState === 'spinning' ? 'animate-spin' : ''}`}>
-                                {gameState === 'spinning' ? (
-                                    <span className="text-4xl">🎲</span>
-                                ) : (
-                                    <div className="text-center">
-                                        <div className="text-xs text-stone-400 uppercase tracking-widest mb-1 font-sans">Số lượng</div>
-                                        <div className="text-6xl font-bold text-amber-500 font-sans">{challenge.count || '?'}</div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <button onClick={spinWheel} disabled={gameState !== 'idle' && gameState !== 'feedback'} className={`w-full py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 ${gameState === 'idle' || gameState === 'feedback' ? 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg shadow-amber-900/40 transform hover:-translate-y-1' : 'bg-stone-700 text-stone-500 cursor-not-allowed'}`}>
-                                <Icons.Refresh size={20} className={gameState === 'spinning' ? 'animate-spin' : ''} />
-                                {gameState === 'idle' || gameState === 'feedback' ? 'Quay Thử Thách Mới' : 'Đang Chơi...'}
-                            </button>
+                <div className="relative mx-auto bg-stone-900 rounded-2xl p-2 shadow-2xl" style={{ width: size }}>
+                    {/* Bề mặt máy Jackpot */}
+                    <div className="bg-red-800 w-full h-full absolute inset-0 rounded-2xl -z-10 shadow-[0_0_20px_rgba(255,0,0,0.8)]"></div>
+                    
+                    {/* Center Marker Light Effect */}
+                    <div className="absolute top-1/2 left-0 right-0 h-10 -translate-y-1/2 bg-white/20 z-10 pointer-events-none mix-blend-overlay"></div>
+                    
+                    {/* Reel Viewport */}
+                    <div className="reel-viewport rounded-xl border-4 border-amber-600 shadow-2xl">
+                        {/* Reel Items List */}
+                        <div 
+                            className={`flex flex-col`}
+                            style={{
+                                transition: 'transform 5s cubic-bezier(0.15, 0.85, 0.35, 1)',
+                                transform: isSpinning
+                                    ? `translateY(-${spinningY}px)`
+                                    : `translateY(-${finalY}px)`
+                            }}
+                        >
+                            {items.map((item) => (
+                                <div 
+                                    key={item.uniqueId} 
+                                    className="reel-item border-b border-white/10" 
+                                    style={{ backgroundColor: item.colorHex }}
+                                >
+                                    {item.displayText}
+                                </div>
+                            ))}
                         </div>
                     </div>
-                    <div className="md:w-2/3 p-8 md:p-12 relative flex flex-col justify-center">
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1594833245037-657d45e459a9?q=80&w=2000&auto=format&fit=crop')] bg-cover opacity-10"></div>
-                        <div className="absolute inset-0 bg-amber-50/50"></div>
-                        
-                        <div className="relative z-10">
-                            {gameState === 'idle' || gameState === 'spinning' ? (
-                                <div className="text-center opacity-60">
-                                    <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Icons.Play size={40} className="text-amber-600 ml-1" />
+                    {/* Indicator Line */}
+                    <div className="reel-indicator"></div>
+                </div>
+            );
+        };
+
+
+        // 1. GAME DEMO COMPONENT (UPDATED)
+        const GameDemo = () => {
+            // Data for Slot Reel
+            const demoThemes = [
+                { name: "Ẩm thực", color: "red-600", colorHex: "#EF4444" },
+                { name: "Lễ hội", color: "green-500", colorHex: "#10B981" },
+                { name: "Truyền thuyết", color: "blue-500", colorHex: "#3B82F6" },
+                { name: "Di tích", color: "purple-500", colorHex: "#8B5CF6" },
+                { name: "Trang phục", color: "amber-500", colorHex: "#F59E0B" },
+                { name: "Nghề thủ công", color: "teal-500", colorHex: "#14B8A6" },
+            ];
+            const wordCounts = [3, 5, 7]; // Words required
+            
+            // Custom data structure for count wheel
+            const countWheelData = wordCounts.map(count => ({
+                count,
+                name: `${count} Từ`,
+                color: count === 3 ? "amber-500" : (count === 5 ? "blue-700" : "pink-800"),
+                colorHex: count === 3 ? "#FBBF24" : (count === 5 ? "#1D4ED8" : "#9D174D")
+            }));
+
+            // Dummy acceptable answers for the demo
+            const dummyGoodAnswers = {
+                "Ẩm thực": ["phở", "bún chả", "chả cá", "cốm", "bánh cuốn", "bún đậu", "bún thang", "mắm tôm","phở","phở bò","phở gà","phở tái","phở chín","phở nạm","phở sốt vang","bún","bún bò","bún bò huế","bún chả","bún đậu","bún đậu mắm tôm","bún riêu","bún riêu cua","bún thang","bún mắm","bún nước lèo","bún cá","bún cá hải phòng","bún mọc","bún sườn","bún nem","bún ốc",
+"mì","mì quảng","mì xào","mì gà","mì vịt tiềm","cao lầu","hủ tiếu","hủ tiếu nam vang","hủ tiếu mỹ tho","miến","miến gà","miến lươn","miến trộn",
+"cơm","cơm tấm","cơm sườn","cơm gà","cơm rang","cơm chiên","cơm chiên dương châu","cơm niêu","cơm lam","cơm cháy","cơm hến","cơm âm phủ","cơm nắm","cơm nắm muối mè",
+"cháo","cháo gà","cháo lòng","cháo vịt","cháo sườn","cháo cá","cháo lươn",
+"bánh chưng","bánh tét","bánh dày","bánh giầy","bánh cuốn","bánh giò","bánh đúc","bánh xèo","bánh khọt","bánh bèo","bánh nậm","bánh bột lọc","bánh ram ít","bánh căn","bánh canh","bánh canh cá lóc","bánh canh cua","bánh tráng","bánh tráng trộn","bánh tráng nướng","bánh đa cua",
+"xôi","xôi xéo","xôi gấc","xôi mặn","xôi lạc","xôi ngô",
+"nem","nem rán","nem chua","nem lụi","tré","chả","chả lụa","chả bò","chả cá","chả cá lã vọng","chả ram","chả giò",
+"gỏi","gỏi cuốn","gỏi ngó sen","gỏi đu đủ","gỏi bò","gỏi gà","gỏi xoài",
+"canh","canh chua","canh cua","canh khổ qua","canh măng","canh rong biển",
+"lẩu","lẩu mắm","lẩu cá","lẩu cá linh","lẩu gà","lẩu gà lá é","lẩu bò","lẩu hải sản",
+"thịt kho","thịt kho tàu","cá kho","cá kho tộ","cá lóc nướng trui","cá nục hấp","cá chiên","cá hấp","gà luộc","gà nướng","vịt quay","vịt nấu chao","bò lá lốt","bò kho","bò né","bò bít tết",
+"chè","chè đậu xanh","chè đậu đỏ","chè trôi nước","chè ba màu","chè chuối","chè bắp","chè sen","chè thập cẩm","sương sáo","rau câu","bánh flan",],
+                "Lễ hội": ["tết", "trung thu", "giỗ tổ", "lim", "chùa hương", "hạ điền","tết nguyên đán","tết trung thu","tết hàn thực","tết đoan ngọ","tết ông công ông táo",
+    "lễ hội đền hùng","giỗ tổ hùng vương","lễ hội chùa hương","lễ hội lim",
+    "lễ hội gióng","lễ hội yên tử","lễ hội bà chúa xứ","lễ hội ok om bok",
+    "lễ hội đua ghe ngo","lễ hội cầu ngư","lễ hội đâm trâu","lễ hội katê",
+    "lễ hội cồng chiêng","lễ hội làng","lễ hội xuân","lễ hội đình làng"],
+                "Truyền thuyết": ["sơn tinh", "thánh gióng", "tấm cám", "chử đồng tử", "an dương vương", "lạc long quân","lạc long quân","âu cơ","con rồng cháu tiên","thánh gióng","sơn tinh thủy tinh",
+    "bánh chưng bánh giầy","an dương vương","mỵ châu trọng thủy",
+    "sự tích trầu cau","sự tích dưa hấu","sự tích cây tre trăm đốt",
+    "sự tích hồ gươm","sự tích chú cuội","tấm cám","thạch sanh",
+    "cây khế","sự tích bánh dày","sự tích ông táo"],
+                "Di tích": ["văn miếu", "huế", "hạ long", "hồ gươm", "mỹ sơn", "phố cổ", "nhà tù côn đảo", "văn miếu quốc tử giám","hoàng thành thăng long","cố đô huế",
+    "thánh địa mỹ sơn","phố cổ hội an","vịnh hạ long",
+    "đền hùng","chùa một cột","chùa hương","chùa yên tử",
+    "nhà tù hỏa lò","dinh độc lập","địa đạo củ chi",
+    "tháp bà ponagar","tháp chàm","đền ngọc sơn",
+    "lăng chủ tịch hồ chí minh","bến nhà rồng"],
+                "Trang phục": ["áo dài", "nón lá", "khăn đóng", "áo bà ba", "yếm", "nón quai thao", "áo dài","áo tứ thân","áo bà ba","áo yếm",
+    "khăn đóng","nón lá","nón quai thao",
+    "váy dân tộc","trang phục dân tộc thái",
+    "trang phục dân tộc hmông","trang phục dân tộc dao",
+    "trang phục dân tộc ê đê","trang phục dân tộc khmer",
+    "áo the","khăn vấn"],
+                "Nghề thủ công": ["gốm", "lụa", "điêu khắc", "đúc đồng", "tranh sơn mài", "thêu","làm gốm","gốm bát tràng","gốm chu đậu",
+    "dệt lụa","lụa vạn phúc","lụa tân châu",
+    "đan lát","đan tre","đan mây",
+    "làm nón lá","làm hương","làm tranh đông hồ",
+    "tranh hàng trống","đúc đồng","chạm khắc gỗ",
+    "sơn mài","làm giấy dó","làm quạt giấy"],
+            };
+
+            // States
+            const [currentTheme, setCurrentTheme] = useState(null);
+            const [requiredCount, setRequiredCount] = useState(null);
+            const [answer, setAnswer] = useState('');
+            const [status, setStatus] = useState('initial'); // initial, spinning, playing, checking, correct, wrong
+            
+            // Slot Reel States
+            const [themeResultIndex, setThemeResultIndex] = useState(0);
+            const [countResultIndex, setCountResultIndex] = useState(0);
+            const [isSpinnable, setIsSpinnable] = useState(true);
+
+            const spinWheel = () => {
+                if (!isSpinnable || status === 'spinning') return;
+
+                setStatus('spinning');
+                setIsSpinnable(false);
+                setAnswer('');
+                
+                // Reset state
+                setCurrentTheme(null);
+                setRequiredCount(null);
+                
+                // Randomly select the result indices
+                const randomThemeIndex = Math.floor(Math.random() * demoThemes.length);
+                const randomCountIndex = Math.floor(Math.random() * wordCounts.length);
+
+                // Start spinning: set to a random index for the first frame
+                setThemeResultIndex(randomThemeIndex);
+                setCountResultIndex(randomCountIndex);
+                
+                // Set the result index after animation (e.g., 5 seconds)
+                setTimeout(() => {
+                    setCurrentTheme(demoThemes[randomThemeIndex].name);
+                    setRequiredCount(wordCounts[randomCountIndex]);
+                    setStatus('playing');
+                }, 5500); // Animation duration is 5s
+            };
+
+            const checkAnswer = () => {
+                if (status !== 'playing') return; 
+                
+                setStatus('checking');
+                
+                setTimeout(() => {
+                    const normalized = answer.toLowerCase().trim();
+                    const words = normalized.split(/[,;\s]+/).filter(w => w.length > 0);
+                    const wordCount = words.length;
+
+                    // 1. Check word count requirement
+                    const hasEnoughWords = wordCount >= requiredCount;
+
+                    // 2. Check for relevance (at least one word should be a good answer)
+                    const currentAnswers = dummyGoodAnswers[currentTheme] || [];
+                    const foundGoodWord = words.some(word => currentAnswers.includes(word));
+                    
+                    const isCorrect = hasEnoughWords && foundGoodWord;
+                    
+                    setStatus(isCorrect ? 'correct' : 'wrong');
+                    setIsSpinnable(true);
+                    
+                    // Reset to initial state after 3 seconds for a fresh game
+                    setTimeout(() => {
+                         setStatus('initial');
+                         setCurrentTheme(null);
+                         setRequiredCount(null);
+                         setAnswer('');
+                    }, 3000);
+                    
+                }, 800);
+            };
+
+            return (
+                <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl border-2 border-amber-400 max-w-4xl mx-auto relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 to-red-600"></div>
+                    
+                    <div className="text-center mb-6">
+                        <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Chơi Thử Nghiệm</span>
+                        <h3 className="text-2xl font-serif font-bold mt-2 text-stone-900">Thử Thách Slot Reel</h3>
+                    </div>
+
+                    {/* SPINNER SECTION (USING SLOT REEL) */}
+                    <div className="flex flex-col lg:flex-row items-center justify-center gap-8 mb-8 p-4 bg-stone-50 rounded-2xl border border-stone-200">
+                        <div className="text-center">
+                            <p className="font-bold text-lg text-stone-800 mb-4">Chủ Đề</p>
+                            <SlotReel 
+                                data={demoThemes} 
+                                resultIndex={themeResultIndex} 
+                                isSpinning={status === 'spinning'} 
+                                label="theme"
+                            />
+                        </div>
+
+                        <div className="text-center">
+                            <p className="font-bold text-lg text-stone-800 mb-4">Số Từ Yêu Cầu</p>
+                            <SlotReel 
+                                data={countWheelData} 
+                                resultIndex={countResultIndex} 
+                                isSpinning={status === 'spinning'} 
+                                label="count"
+                                size="120px"
+                            />
+                        </div>
+
+                        <div className="lg:w-1/3 w-full mt-4 lg:mt-0">
+                            <button 
+                                onClick={spinWheel}
+                                disabled={!isSpinnable || status === 'spinning'}
+                                className={`w-full py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg active:scale-95 ${!isSpinnable || status === 'spinning' ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'}`}
+                            >
+                                <Icons.Play size={18} /> 
+                                {status === 'spinning' ? 'Đang Quay...' : 'Gieo Quẻ Thử Thách'}
+                            </button>
+                            
+                            <div className="mt-4 p-4 text-center rounded-xl bg-amber-100 border border-amber-300">
+                                <p className="text-sm font-medium text-amber-800">
+                                    {currentTheme && requiredCount 
+                                        ? <strong>Chủ đề: <span className="text-red-700">{currentTheme}</span> | Cần: <span className="text-red-700">{requiredCount} từ</span></strong>
+                                        : (status === 'spinning' ? 'Đang tìm kiếm thử thách...' : 'Nhấn nút để bắt đầu lượt chơi mới!')
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ANSWER SECTION */}
+                    {status === 'playing' || status === 'checking' || status === 'correct' || status === 'wrong' ? (
+                        <div className="animate-fade-in pt-4">
+                            <p className="text-stone-600 text-center mb-4 text-lg">
+                                Thử thách: Liệt kê <strong className="text-red-600">{requiredCount}</strong> từ khóa liên quan đến <strong className="text-red-600">{currentTheme}</strong>.
+                            </p>
+                            
+                            <div className="relative max-w-md mx-auto">
+                                <input 
+                                    type="text" 
+                                    value={answer}
+                                    onChange={(e) => {setAnswer(e.target.value); setStatus('playing');}}
+                                    placeholder="Nhập câu trả lời của bạn (cách nhau bằng dấu phẩy hoặc khoảng trắng)..."
+                                    className="w-full p-4 rounded-xl border-2 border-stone-200 focus:border-amber-500 focus:outline-none text-center text-lg"
+                                    onKeyPress={(e) => e.key === 'Enter' && checkAnswer()}
+                                    disabled={status === 'checking' || status === 'correct' || status === 'wrong'}
+                                />
+                                <button 
+                                    onClick={checkAnswer}
+                                    disabled={status !== 'playing' || answer.trim() === ''}
+                                    className="mt-4 w-full bg-stone-900 text-white font-bold py-3 rounded-xl hover:bg-stone-800 transition flex items-center justify-center gap-2 disabled:bg-stone-400 disabled:cursor-not-allowed"
+                                >
+                                    {status === 'checking' ? 'Đang kiểm tra...' : 'Gửi Đáp Án'} <Icons.Send size={18}/>
+                                </button>
+                            </div>
+                            
+                            {/* RESULTS MESSAGES */}
+                            {status === 'correct' && (
+                                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl text-center animate-fade-in">
+                                    <div className="text-green-600 font-bold text-lg flex items-center justify-center gap-2">
+                                        <Icons.CheckCircle /> Chính xác!
                                     </div>
-                                    <h4 className="text-xl font-bold text-stone-700">Sẵn sàng thử thách?</h4>
-                                    <p className="text-stone-500">Nhấn nút quay để nhận chủ đề và số lượng đáp án cần tìm.</p>
-                                </div>
-                            ) : gameState === 'solving' ? (
-                                <div className="animate-float-in">
-                                    <div className="mb-6">
-                                        <span className="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wide mb-2">Nhiệm vụ của bạn</span>
-                                        <h3 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-2">"{challenge.topic}"</h3>
-                                        <p className="text-lg text-stone-600">Hãy liệt kê <strong className="text-amber-700 text-xl">{challenge.count}</strong> đáp án liên quan.</p>
-                                    </div>
-                                    <textarea className="w-full p-4 rounded-xl border-2 border-amber-200 focus:border-amber-500 focus:ring-0 bg-white shadow-sm text-lg mb-4" rows="3" placeholder="Ví dụ: Phở, Bún chả, Bánh mì..." value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)}></textarea>
-                                    <button onClick={submitAnswer} className="w-full py-4 bg-stone-800 text-white rounded-xl font-bold hover:bg-stone-700 transition flex items-center justify-center gap-2"><Icons.CheckCircle className="text-green-400" /> Kiểm Tra Ngay</button>
-                                </div>
-                            ) : (
-                                // Feedback state
-                                <div className={`text-center bg-white p-8 rounded-2xl border ${isSuccess ? 'border-green-100' : 'border-amber-100'} shadow-lg animate-bounce-in`}>
-                                    <div className={`w-16 h-16 ${bgClass} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                                        <Icons.Sparkles size={32} className={iconClass} />
-                                    </div>
-                                    <h4 className="text-2xl font-bold text-stone-800 mb-4">{isSuccess ? 'NHIỆM VỤ HOÀN THÀNH!' : 'CHƯA ĐẠT CHỈ TIÊU'}</h4>
-                                    <div className="bg-stone-50 p-4 rounded-lg text-sm text-stone-900 border border-stone-100 mb-4 text-left">
-                                        <p className="text-stone-700 mb-2">
-                                            Yêu cầu: <strong className="text-amber-700">{feedbackResult.requiredCount}</strong> đáp án.
-                                            <br />
-                                            Tìm thấy: <strong className={isSuccess ? 'text-green-600' : 'text-red-600'}>{feedbackResult.correctCount}</strong> đáp án đúng.
-                                        </p>
-                                        <p className="font-bold border-t pt-2 mt-2 border-stone-200">Lời Bình:</p>
-                                        <p className="italic text-stone-600">{feedbackResult.message}</p>
-                                        {feedbackResult.correctCount > 0 && (
-                                            <p className="mt-2 text-xs text-green-700 font-medium">Các đáp án được chấp nhận: {feedbackResult.correctAnswersFound.join(', ')}</p>
-                                        )}
-                                    </div>
-                                    <button onClick={() => setGameState('idle')} className="mt-4 w-full py-3 rounded-xl font-bold transition bg-amber-600 hover:bg-amber-700 text-white shadow-lg">Quay Lại Vòng Quay</button>
+                                    <p className="text-green-800 text-sm">Bạn đã hoàn thành thử thách <strong className="text-red-700">{requiredCount}</strong> từ khóa!</p>
                                 </div>
                             )}
+
+                            {status === 'wrong' && (
+                                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-center animate-fade-in">
+                                    <div className="text-red-600 font-bold text-lg">Chưa hoàn thành</div>
+                                    <p className="text-red-800 text-sm">Bạn cần liệt kê đủ <strong className="text-red-700">{requiredCount}</strong> từ khóa và có ý liên quan đến <strong className="text-red-700">{currentTheme}</strong>.</p>
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
+                </div>
+            );
+        };
+        
+        const CharacterShowcase = () => {
+            const [active, setActive] = useState(0);
+
+            return (
+                <div className="bg-white rounded-3xl p-6 md:p-10 shadow-xl border border-amber-100">
+                    <div className="text-center mb-8">
+                        <span className="text-amber-600 font-bold uppercase tracking-widest text-xs md:text-sm">Hệ Thống Nhân Vật</span>
+                        <h3 className="text-3xl font-serif font-bold text-stone-900 mt-2">Nhập Vai Cổ Tích</h3>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-8 items-stretch">
+                        <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2 scrollbar-hide">
+                            {CHARACTERS.map((char, idx) => (
+                                <div 
+                                    key={char.id}
+                                    onClick={() => setActive(idx)}
+                                    className={`p-4 rounded-xl cursor-pointer transition-all duration-300 flex items-center gap-4 border ${active === idx ? 'bg-amber-50 border-amber-400 shadow-md transform translate-x-2' : 'bg-white border-stone-100 hover:bg-stone-50'}`}
+                                >
+                                    <div className={`w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-lg shadow-sm ${char.color}`}>
+                                        {char.name.charAt(0)}
+                                    </div>
+                                    <div className="flex-grow">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className={`font-bold ${active === idx ? 'text-stone-900' : 'text-stone-600'}`}>{char.name}</h4>
+                                            <span className="text-[10px] uppercase font-bold text-stone-400 border border-stone-200 px-1 rounded">{char.role}</span>
+                                        </div>
+                                        <p className="text-xs text-stone-500 line-clamp-1">{char.bio}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="bg-stone-50 rounded-2xl p-8 flex flex-col justify-center border border-stone-200 relative overflow-hidden min-h-[300px]">
+                             <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <Icons.Sparkles size={100} />
+                             </div>
+                            
+                            <div className="relative z-10">
+                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase mb-4 ${CHARACTERS[active].color}`}>
+                                    Kỹ Năng: {CHARACTERS[active].role}
+                                </span>
+                                <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-2">{CHARACTERS[active].name}</h2>
+                                <p className="text-stone-500 italic mb-6 text-sm border-l-4 border-amber-400 pl-3">"{CHARACTERS[active].bio}"</p>
+                                
+                                <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm">
+                                    <p className="text-stone-800 font-medium">Quyền Năng:</p>
+                                    <p className="text-stone-600 text-sm mt-1">{CHARACTERS[active].desc}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        // --- FEEDBACK CAROUSEL ---
-        const Feedback = () => {
-            const [currentIndex, setCurrentIndex] = useState(0);
-            const [feedbacks, setFeedbacks] = useState([
-                { name: "Minh Anh", role: "Học sinh THPT", content: "Game siêu cuốn! Vừa chơi vừa học sử mà không bị chán. Mình thích nhất phần Ông Bụt AI.", stars: 5 },
-                { name: "Chị Lan", role: "Phụ huynh", content: "Cuối tuần nào cả nhà cũng lôi ra chơi. Bé nhà mình giờ thuộc làu tên các món ăn đặc sản 3 miền.", stars: 5 },
-                { name: "Thầy Hùng", role: "Giáo viên Lịch Sử", content: "Công cụ giáo dục trực quan tuyệt vời. Ý tưởng 'Dựng tháp - Dựng nước' rất ý nghĩa.", stars: 5 },
-                { name: "Bạn Nam", role: "Sinh viên", content: "Chất liệu tre rất đẹp, cầm chắc tay. Rất tự hào về sản phẩm Việt Nam.", stars: 5 },
-                { name: "Cô Hoa", role: "Hiệu trưởng", content: "Nhà trường sẽ cân nhắc đưa bộ game này vào thư viện. Rất bổ ích.", stars: 4 }
-            ]);
-            
-            const [newFeedback, setNewFeedback] = useState("");
-            const [newName, setNewName] = useState("");
+        const GameRules = () => {
+            const steps = [
+                { title: "Gieo Quẻ Chủ Đề", desc: "Người chơi chọn nhân vật và rút 1 quẻ chủ đề từ 18 quẻ tre." },
+                { title: "Quay Bàn Xoay", desc: "Quay để xác định số lượng từ phải liệt kê hoặc nhận thẻ Linh Vận/May Rủi." },
+                { title: "Tranh Tài Liệt Kê", desc: "Lần lượt liệt kê từ vựng theo chủ đề. Ai không tìm được sẽ bị loại khỏi vòng." },
+                { title: "Dựng Tháp Di Sản", desc: "Người thắng vòng bốc thẻ hình khối, lấy khối tương ứng để xây tháp." }
+            ];
 
-            const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % feedbacks.length);
-            const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + feedbacks.length) % feedbacks.length);
+            return (
+                <div className="grid md:grid-cols-4 gap-6">
+                    {steps.map((step, idx) => (
+                        <div key={idx} className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition relative group text-center md:text-left">
+                            <div className="inline-block md:absolute md:-top-4 md:left-6 w-10 h-10 bg-amber-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-md mb-4 md:mb-0">
+                                {idx + 1}
+                            </div>
+                            <h4 className="md:mt-4 text-lg font-bold text-stone-800 mb-2">{step.title}</h4>
+                            <p className="text-sm text-stone-500">{step.desc}</p>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
 
-            const handleSubmitFeedback = (e) => {
+        // --- PRODUCT CARD (UPDATED LAYOUT) ---
+        const ProductCard = ({ title, price, features, image, popular, onAddToCart }) => {
+            const productRef = useRef(null);
+
+            const handleBuyClick = (e) => {
                 e.preventDefault();
-                if(!newFeedback || !newName) return;
-                const newItem = { name: newName, role: "Người chơi mới", content: newFeedback, stars: 5 };
-                setFeedbacks([newItem, ...feedbacks]);
-                setNewName("");
-                setNewFeedback("");
-                setCurrentIndex(0); 
-                alert("Cảm ơn bạn đã đánh giá!");
-            };
-
-            const visibleFeedbacks = () => {
-                const items = [];
-                for (let i = 0; i < 3; i++) {
-                    const index = (currentIndex + i) % feedbacks.length;
-                    items.push(feedbacks[index]);
+                if (productRef.current) {
+                    const rect = productRef.current.getBoundingClientRect();
+                    // Parse numeric price from display string like "219.000 VNĐ"
+                    const numericPrice = Number(String(price).replace(/\D/g, '')) || 0;
+                    const productData = { id: title.replace(/\s+/g,'-').toLowerCase(), name: title, price: numericPrice, quantity: 1 };
+                    onAddToCart(productData, rect.x + rect.width / 2, rect.y + rect.height / 2);
                 }
-                return items;
             };
 
             return (
-                <div className="w-full">
-                    <div className="relative px-12">
-                        <button onClick={prevSlide} className="absolute left-0 top-1/2 -translate-y-1/2 bg-white border border-amber-200 p-3 rounded-full hover:bg-amber-50 shadow-md z-10"><Icons.ArrowLeft size={24} className="text-amber-700" /></button>
-                        <button onClick={nextSlide} className="absolute right-0 top-1/2 -translate-y-1/2 bg-white border border-amber-200 p-3 rounded-full hover:bg-amber-50 shadow-md z-10"><Icons.ArrowRight size={24} className="text-amber-700" /></button>
+                <div ref={productRef} className={`bg-white rounded-3xl overflow-hidden border transition duration-300 w-full max-w-5xl mx-auto ${popular ? 'border-amber-400 shadow-2xl' : 'border-stone-100 shadow-lg'}`}>
+                    {popular && (
+                        <div className="bg-amber-500 text-white text-xs font-bold uppercase tracking-widest py-1 text-center">
+                            Đầy Đủ Thành Phần
+                        </div>
+                    )}
+                    <div className="grid md:grid-cols-2 gap-0">
+                        {/* LEFT: IMAGE */}
+                        <div className="h-[400px] md:h-[520px] bg-stone-100 overflow-hidden">
+                            <img 
+                                src={image}
+                                alt={title}
+                                className="w-full h-full object-cover hover:scale-105 transition duration-700"
+                            />
+                        </div>
+                        {/* RIGHT: INFO */}
+                        <div className="p-8 md:p-10 flex flex-col">
+                            <div className="flex justify-between items-start mb-4">
+                                <h3 className="text-3xl font-serif font-bold text-stone-900">{title}</h3>
+                                {popular && (
+                                    <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">
+                                        HOT
+                                    </span>
+                                )}
+                            </div>
+                            <div className="mb-6">
+                                <div className="text-sm text-stone-400 line-through">
+                                    299.000 VNĐ
+                                </div>
+                                <div className="text-4xl font-bold text-amber-600">
+                                    219.000 VNĐ
+                                </div>
+                            </div>
+                            <ul className="space-y-3 mb-8">
+                                {features.map((f, i) => (
+                                    <li key={i} className="flex items-start gap-3 text-stone-600 text-sm">
+                                        <Icons.CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                                        <span>{f}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="mt-auto flex gap-4">
+                                <button 
+                                    onClick={handleBuyClick}
+                                    className="w-full py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white hover:shadow-xl active:scale-95"
+                                >
+                                    <Icons.Bag size={20} /> Đặt Mua Ngay
+                                </button>
+                                <button 
+                                    onClick={() => scroll('game-demo')}
+                                    className="w-full py-4 rounded-xl font-bold transition flex items-center justify-center gap-2 bg-stone-900 text-white hover:bg-stone-800"
+                                >
+                                    <Icons.Gamepad size={20} /> Trò Chơi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
 
-                        <div className="grid md:grid-cols-3 gap-8">
-                            {visibleFeedbacks().map((fb, idx) => (
-                                <div key={idx} className="bg-white p-6 rounded-2xl shadow-md border border-amber-100 hover:shadow-xl transition duration-300 min-h-[200px] flex flex-col justify-between animate-fade-in relative overflow-hidden group">
-                                    {/* Decoration circle */}
-                                    <div className="absolute -right-4 -top-4 w-20 h-20 bg-amber-50 rounded-full opacity-50"></div>
-                                    
-                                    <div>
-                                        <div className="flex gap-1 mb-4">
-                                            {[...Array(fb.stars)].map((_, i) => (
-                                                <Icons.Star key={i} size={16} className="text-amber-500 fill-amber-500" />
-                                            ))}
-                                        </div>
-                                        <p className="text-stone-600 mb-6 italic">"{fb.content}"</p>
+        // --- FEEDBACK CAROUSEL ---
+        const Feedback = () => {
+             const [currentIndex, setCurrentIndex] = useState(0);
+             // Thêm dữ liệu để đủ 3 cards hiển thị + scroll
+             const feedbacks = [
+                { name: "Minh Anh", role: "Học sinh THPT", content: "Game siêu cuốn! Vừa chơi vừa học sử mà không bị chán.", stars: 5 },
+                { name: "Chị Lan", role: "Phụ huynh", content: "Bộ game làm bằng tre nứa rất an toàn. Bé nhà mình rất thích.", stars: 5 },
+                { name: "Thầy Hùng", role: "Giáo viên", content: "Công cụ giáo dục trực quan tuyệt vời cho học sinh.", stars: 5 },
+                { name: "Hoàng Nam", role: "Sinh viên", content: "Thiết kế đẹp, đậm chất Việt Nam. Rất đáng tiền.", stars: 4 },
+                { name: "Mai Phương", role: "NV Văn phòng", content: "Mình mua làm quà tặng đối tác nước ngoài, họ rất thích.", stars: 5 },
+                { name: "Đức Thịnh", role: "Freelancer", content: "Luật chơi hay, tính chiến thuật cao ở phần dựng tháp.", stars: 4 },
+             ];
+             
+             // Logic hiển thị 3 item
+             const visibleFeedbacks = [
+                 feedbacks[currentIndex % feedbacks.length],
+                 feedbacks[(currentIndex + 1) % feedbacks.length],
+                 feedbacks[(currentIndex + 2) % feedbacks.length]
+             ];
+
+             const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % feedbacks.length);
+             const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + feedbacks.length) % feedbacks.length);
+
+             return (
+                <div className="w-full">
+                    <div className="relative px-2 md:px-12 mb-16">
+                         {/* Navigation Buttons */}
+                        <button onClick={prevSlide} className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white border border-stone-200 hover:bg-amber-50 shadow-md text-stone-600 z-10"><Icons.ArrowLeft /></button>
+                        <button onClick={nextSlide} className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white border border-stone-200 hover:bg-amber-50 shadow-md text-stone-600 z-10"><Icons.ArrowRight /></button>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {visibleFeedbacks.map((fb, idx) => (
+                                <div key={idx} className="bg-white p-6 rounded-2xl shadow-md border border-stone-100 flex flex-col h-full animate-fade-in">
+                                    <div className="flex gap-1 mb-4">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Icons.Star key={i} size={16} className={i < fb.stars ? "text-amber-400 fill-amber-400" : "text-stone-300"} />
+                                        ))}
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center font-bold text-amber-700">
+                                    <p className="text-stone-600 italic mb-6 flex-grow">"{fb.content}"</p>
+                                    <div className="flex items-center gap-3 mt-auto pt-4 border-t border-stone-100">
+                                        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center font-bold text-amber-700 text-sm">
                                             {fb.name.charAt(0)}
                                         </div>
-                                        <div>
+                                        <div className="text-left">
                                             <p className="font-bold text-stone-900 text-sm">{fb.name}</p>
-                                            <p className="text-xs text-stone-400">{fb.role}</p>
+                                            <p className="text-xs text-stone-500">{fb.role}</p>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
+                        
+                        {/* Mobile Navigation */}
+                        <div className="flex md:hidden justify-center gap-4 mt-6">
+                            <button onClick={prevSlide} className="p-3 rounded-full bg-white border border-stone-200 shadow-sm"><Icons.ArrowLeft /></button>
+                            <button onClick={nextSlide} className="p-3 rounded-full bg-white border border-stone-200 shadow-sm"><Icons.ArrowRight /></button>
+                        </div>
                     </div>
 
-                    <div className="max-w-4xl mx-auto mt-16 flex flex-col md:flex-row gap-8 items-center bg-white p-8 rounded-3xl border border-stone-200 shadow-lg">
-                        <div className="md:w-1/3">
-                            <img src="https://images.unsplash.com/photo-1596464716127-f2a82984de30?q=80&w=1000&auto=format&fit=crop" alt="Feedback illustration" className="w-full rounded-2xl shadow-md" />
+                    {/* Form Gửi Đánh Giá */}
+                    <div className="max-w-2xl mx-auto bg-stone-50 p-8 rounded-3xl border border-stone-200">
+                        <h4 className="text-xl font-bold text-center mb-6">Chia Sẻ Trải Nghiệm Của Bạn</h4>
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                            <input type="text" placeholder="Tên của bạn" className="w-full p-3 rounded-xl border border-stone-300 focus:border-amber-500 focus:outline-none" />
+                            <input type="email" placeholder="Email" className="w-full p-3 rounded-xl border border-stone-300 focus:border-amber-500 focus:outline-none" />
                         </div>
-                        <div className="md:w-2/3 w-full">
-                            <h4 className="text-xl font-bold text-stone-800 mb-4 font-serif">Chia Sẻ Cảm Nhận Của Bạn</h4>
-                            <form onSubmit={handleSubmitFeedback} className="space-y-4">
-                                <input type="text" placeholder="Tên của bạn" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 rounded-xl border border-stone-300 focus:border-amber-500 focus:outline-none" />
-                                <textarea placeholder="Bạn nghĩ gì về Đường Đến Di Sản?" rows="3" value={newFeedback} onChange={(e) => setNewFeedback(e.target.value)} className="w-full p-3 rounded-xl border border-stone-300 focus:border-amber-500 focus:outline-none"></textarea>
-                                <button type="submit" className="w-full bg-amber-600 text-white font-bold py-3 rounded-xl hover:bg-amber-700 transition">Gửi Đánh Giá</button>
-                            </form>
-                        </div>
+                        <textarea rows="3" placeholder="Bạn cảm thấy thế nào về Đường Đến Di Sản?" className="w-full p-3 rounded-xl border border-stone-300 focus:border-amber-500 focus:outline-none mb-4"></textarea>
+                        <button className="w-full bg-stone-900 text-white font-bold py-3 rounded-xl hover:bg-stone-800 transition">Gửi Đánh Giá</button>
                     </div>
                 </div>
             );
-        };
+        }
+
+        // --- CONTACT FORM ---
+        const ContactForm = () => (
+            <div className="bg-white p-8 rounded-3xl shadow-lg border border-stone-100">
+                <h3 className="text-2xl font-serif font-bold text-stone-900 mb-6">Liên Hệ Với Chúng Tôi</h3>
+                <form className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-1">Họ và Tên</label>
+                        <input type="text" className="w-full p-3 rounded-xl border border-stone-200 focus:border-amber-500 focus:outline-none bg-stone-50" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-1">Số Điện Thoại</label>
+                        <input type="tel" className="w-full p-3 rounded-xl border border-stone-200 focus:border-amber-500 focus:outline-none bg-stone-50" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-1">Lời Nhắn</label>
+                        <textarea rows="4" className="w-full p-3 rounded-xl border border-stone-200 focus:border-amber-500 focus:outline-none bg-stone-50"></textarea>
+                    </div>
+                    <button className="w-full bg-amber-600 text-white font-bold py-3 rounded-xl hover:bg-amber-700 transition shadow-lg">Gửi Tin Nhắn</button>
+                </form>
+            </div>
+        );
 
         // --- MAIN APP ---
         const App = () => {
             const [menu, setMenu] = useState(false);
-            const scroll = (id) => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); setMenu(false); };
+            const [cartCount, setCartCount] = useState(0);
+            const [showToast, setShowToast] = useState(false);
+            const [isCartAnimating, setIsCartAnimating] = useState(false);
+            const [flyItem, setFlyItem] = useState(null); // {x, y} coordinates for the flying item
+
+            // Initialize cart count from localStorage
+            useEffect(() => {
+                try {
+                    const stored = JSON.parse(localStorage.getItem('cart') || '[]');
+                    const total = stored.reduce((s, it) => s + (it.quantity || 0), 0);
+                    setCartCount(total);
+                } catch (e) {
+                    setCartCount(0);
+                }
+            }, []);
+
+            const scroll = (id) => { 
+                const element = document.getElementById(id);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' }); 
+                    setMenu(false); 
+                }
+            };
+
+            const handleAddToCart = (product, startX, startY) => {
+                // 1. Start the visual animation (flying item)
+                setFlyItem({ x: startX, y: startY });
+
+                // 2. Find the target cart position (top right nav)
+                const cartElement = document.getElementById('cart-icon');
+                if (cartElement) {
+                    const cartRect = cartElement.getBoundingClientRect();
+                    
+                    // Use CSS variables or transition for the flight path
+                    const flyAnimation = document.createElement('div');
+                    flyAnimation.style.cssText = `
+                        position: fixed;
+                        top: ${startY}px;
+                        left: ${startX}px;
+                        width: 30px;
+                        height: 30px;
+                        background: #F59E0B;
+                        border-radius: 50%;
+                        z-index: 1000;
+                        transition: all 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                        opacity: 1;
+                        pointer-events: none;
+                        transform: scale(1);
+                    `;
+                    document.body.appendChild(flyAnimation);
+
+                    // Trigger flight animation
+                    setTimeout(() => {
+                        flyAnimation.style.top = `${cartRect.y + cartRect.height / 2}px`;
+                        flyAnimation.style.left = `${cartRect.x + cartRect.width / 2}px`;
+                        flyAnimation.style.transform = 'scale(0.2)';
+                        flyAnimation.style.opacity = '0.5';
+                    }, 10);
+                    
+                    // 3. Update state and localStorage after animation (0.7s)
+                    setTimeout(() => {
+                        document.body.removeChild(flyAnimation);
+
+                        // Read existing cart from localStorage
+                        let cart = [];
+                        try {
+                            cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                        } catch (e) { cart = []; }
+
+                        // Find if product already exists (by id)
+                        const idx = cart.findIndex(it => it.id === product.id);
+                        if (idx >= 0) {
+                            cart[idx].quantity = (cart[idx].quantity || 0) + (product.quantity || 1);
+                        } else {
+                            cart.push({ ...product });
+                        }
+
+                        // Persist
+                        try { localStorage.setItem('cart', JSON.stringify(cart)); } catch (e) { console.warn('localStorage set failed', e); }
+
+                        // Update UI state
+                        const totalQty = cart.reduce((s, it) => s + (it.quantity || 0), 0);
+                        setCartCount(totalQty);
+                        setIsCartAnimating(true);
+                        setShowToast(true);
+                        
+                        setTimeout(() => setIsCartAnimating(false), 500); // Cart bounce duration
+                        setTimeout(() => setShowToast(false), 3000); // Toast duration
+                    }, 700);
+                }
+            };
 
             return (
-                <div className="font-sans min-h-screen flex flex-col overflow-x-hidden selection:bg-amber-200 selection:text-amber-900">
+                <div className="font-sans min-h-screen flex flex-col overflow-x-hidden selection:bg-amber-200 selection:text-amber-900 relative">
+                    
+                    {/* TOAST NOTIFICATION */}
+                    {showToast && (
+                        <div className="fixed top-24 right-5 z-[60] bg-white border-l-4 border-green-500 shadow-2xl p-4 rounded-lg flex items-center gap-3 toast-enter max-w-xs">
+                            <div className="bg-green-100 p-2 rounded-full text-green-600">
+                                <Icons.CheckCircle size={20} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-stone-800 text-sm">Đã thêm vào giỏ</h4>
+                                <p className="text-xs text-stone-500">Sản phẩm đã nằm trong giỏ hàng của bạn.</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* NAV */}
                     <nav className="fixed w-full z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-stone-100 transition-all">
                         <div className="max-w-7xl mx-auto px-4 h-20 flex justify-between items-center">
@@ -361,215 +814,307 @@
                                 </div>
                                 <span className="text-xl md:text-2xl font-bold font-serif text-stone-900 group-hover:text-amber-700 transition">Đường Đến Di Sản</span>
                             </div>
-                            <div className="hidden lg:flex gap-6 font-medium text-stone-600 text-sm">
-                                <button onClick={() => scroll('story')} className="hover:text-amber-700 transition relative group">Cốt truyện</button>
-                                <button onClick={() => scroll('game-arena')} className="hover:text-amber-700 transition relative group">Trò chơi</button>
-                                <button onClick={() => scroll('store')} className="hover:text-amber-700 transition relative group">Cửa hàng</button>
-                                <button onClick={() => scroll('feedback')} className="hover:text-amber-700 transition relative group">Đánh giá</button>
-                                <button onClick={() => scroll('contact')} className="bg-stone-900 text-white px-5 py-2 rounded-full hover:bg-amber-600 transition shadow-md">Liên hệ</button>
+                            
+                            <div className="hidden lg:flex gap-8 font-medium text-stone-600 text-sm tracking-wide items-center">
+                                <button onClick={() => scroll('story')} className="hover:text-amber-700 transition">Cảm hứng</button>
+                                <button onClick={() => scroll('game-demo')} className="hover:text-amber-700 transition">Chơi thử</button>
+                                <button onClick={() => scroll('characters')} className="hover:text-amber-700 transition">Nhân vật</button>
+                                <button onClick={() => scroll('store')} className="hover:text-amber-700 transition">Sản phẩm</button>
+                                <button onClick={() => scroll('contact')} className="hover:text-amber-700 transition">Liên hệ</button>
+                                
+                                {/* Cart Icon (link to cart page) */}
+                                <a id="cart-icon" href="giohang.html" aria-label="Giỏ hàng" className="relative p-2 bg-stone-100 rounded-full cursor-pointer hover:bg-stone-200 transition group">
+                                    <Icons.Bag className={`text-stone-700 ${isCartAnimating ? 'animate-cart-bounce' : ''}`} />
+                                    {cartCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
+                                            {cartCount}
+                                        </span>
+                                    )}
+                                </a>
                             </div>
                             <button className="lg:hidden p-2 text-stone-600" onClick={() => setMenu(!menu)}>{menu ? <Icons.X /> : <Icons.Menu />}</button>
                         </div>
                         {menu && (
-                            <div className="lg:hidden bg-white border-b border-stone-100 p-4 space-y-4 shadow-xl animate-fade-in">
-                                <button onClick={() => scroll('story')} className="block w-full text-left font-medium p-2 hover:bg-stone-50 rounded">Cốt truyện</button>
-                                <button onClick={() => scroll('game-arena')} className="block w-full text-left font-medium p-2 hover:bg-stone-50 rounded">Trò chơi</button>
-                                <button onClick={() => scroll('store')} className="block w-full text-left font-medium p-2 hover:bg-stone-50 rounded">Cửa hàng</button>
-                                <button onClick={() => scroll('feedback')} className="block w-full text-left font-medium p-2 hover:bg-stone-50 rounded">Đánh giá</button>
-                                <button onClick={() => scroll('contact')} className="block w-full text-left font-bold text-amber-700 p-2 hover:bg-stone-50 rounded">Liên hệ</button>
+                            <div className="lg:hidden bg-white border-b border-stone-100 p-4 space-y-4 shadow-xl animate-fade-in absolute w-full z-50">
+                                <button onClick={() => scroll('story')} className="block w-full text-left font-medium p-3 hover:bg-stone-50 rounded-xl">Cảm hứng</button>
+                                <button onClick={() => scroll('game-demo')} className="block w-full text-left font-medium p-3 hover:bg-stone-50 rounded-xl">Chơi thử</button>
+                                <button onClick={() => scroll('store')} className="block w-full text-left font-medium p-3 hover:bg-stone-50 rounded-xl">Sản phẩm</button>
+                                <button onClick={() => scroll('contact')} className="block w-full text-left font-medium p-3 hover:bg-stone-50 rounded-xl">Liên hệ</button>
                             </div>
                         )}
                     </nav>
 
-                    {/* HERO SECTION - Với Hình Ảnh Trống Đồng (Ảnh 1) */}
-                    <header id="hero" className="pt-32 pb-24 relative overflow-hidden min-h-[80vh] flex items-center justify-center">
+                    {/* HERO */}
+                    <header id="hero" className="pt-32 pb-24 relative overflow-hidden min-h-[90vh] flex items-center justify-center">
                         <div className="absolute inset-0">
-                             {/* Ưu tiên file ảnh upload, dự phòng bằng link online nếu file lỗi */}
-                             <img 
-                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Trong_dong_Ngoc_Lu.jpg/1920px-Trong_dong_Ngoc_Lu.jpg" 
-                                onError={(e) => e.target.src='https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Trong_dong_Ngoc_Lu.jpg/1280px-Trong_dong_Ngoc_Lu.jpg'} 
-                                alt="Trống Đồng Đông Sơn" 
-                                className="w-full h-full object-cover transform scale-105" 
-                             />
-                             <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-[1px]"></div>
-                             <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-transparent to-transparent"></div>
+                            <img src="./trongdong.jpg" alt="Trống đồng Đông Sơn" className="w-full h-full object-cover opacity-80" />
+                            <div className="absolute inset-0 bg-stone-900/70"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/40 to-transparent"></div>
                         </div>
-
-                        <div className="max-w-4xl mx-auto px-4 text-center relative z-10 text-white">
-                            <span className="inline-block py-1 px-3 rounded-full bg-amber-600/20 backdrop-blur text-amber-300 text-xs font-bold tracking-widest uppercase mb-6 border border-amber-500/50">Phiên bản mới 2025</span>
-                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold font-serif text-white mb-6 leading-tight drop-shadow-2xl">Đường Đến <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-red-500">Di Sản</span></h1>
-                            <p className="text-xl md:text-2xl text-stone-100 mb-10 max-w-3xl mx-auto font-light font-serif drop-shadow-md">Boardgame kết nối thế hệ - Tôn vinh bản sắc - Đánh thức niềm tự hào dân tộc.</p>
-                            <div className="flex flex-col sm:flex-row justify-center gap-5">
-                                <button onClick={() => scroll('store')} className="bg-gradient-to-r from-amber-600 to-red-700 text-white px-10 py-4 rounded-full font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition duration-300 flex items-center justify-center gap-3 border border-amber-500/30"><Icons.Bag /> Mua Ngay</button>
-                                <button onClick={() => scroll('story')} className="bg-white/10 backdrop-blur text-white border border-white/30 px-10 py-4 rounded-full font-bold hover:bg-white/20 transition duration-300 flex items-center justify-center gap-3 shadow-sm"><Icons.Play className="text-amber-400"/> Khám Phá</button>
+                        <div className="max-w-5xl mx-auto px-4 text-center relative z-10 text-white animate-fade-in">
+                            <div className="inline-flex items-center gap-2 py-1 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-amber-300 text-xs font-bold tracking-widest uppercase mb-8">
+                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                Phiên bản Tre Nứa 2025
+                            </div>
+                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold font-serif text-white mb-8 leading-tight drop-shadow-2xl">
+                                Đường Đến <br/>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-600">Di Sản</span>
+                            </h1>
+                            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
+                                <button onClick={() => scroll('store')} className="bg-gradient-to-r from-amber-600 to-red-700 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:scale-105 transition duration-300 flex items-center justify-center gap-2"><Icons.Bag /> Mua Bộ Game Ngay</button>
+                                <button onClick={() => scroll('game-demo')} className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-white/20 transition duration-300 flex items-center justify-center gap-2"><Icons.Gamepad /> Chơi Thử Nghiệm</button>
                             </div>
                         </div>
                     </header>
 
-                    {/* STORY SECTION - Với Hình Ảnh Cinematic (Ảnh 2) */}
-                    <section id="story" className="py-20 px-4 bg-white relative">
-                        <div className="max-w-7xl mx-auto">
-                            <div className="grid md:grid-cols-2 gap-16 items-center">
-                                <div className="relative rounded-[3rem] overflow-hidden cinematic-shadow h-[500px] group">
-                                    {/* Ảnh 2: Cột cờ Hà Nội - Biểu tượng di sản */}
-                                    <img 
-                                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/C%E1%BB%99t_c%E1%BB%9D_H%C3%A0_N%E1%BB%99i.jpg/800px-C%E1%BB%99t_c%E1%BB%9D_H%C3%A0_N%E1%BB%99i.jpg" 
-                                        alt="Cột Cờ Hà Nội" 
-                                        className="w-full h-full object-cover transform group-hover:scale-105 transition duration-1000 filter brightness-90 contrast-110" 
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-stone-900/80 via-transparent to-transparent flex items-end p-8">
-                                        <div className="text-amber-50">
-                                            <h3 className="text-2xl font-serif font-bold mb-2 text-amber-400">Tháp Vững - Nước Mạnh</h3>
-                                            <p className="text-stone-300 italic text-sm">"Xây từng viên gạch, dựng nghìn năm văn hiến"</p>
-                                        </div>
+                    {/* STORY / INSPIRATION (EXPANDED) */}
+                    <section id="story" className="py-24 px-4 bg-white relative">
+                        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+                            <div className="relative h-[600px] rounded-[3rem] overflow-hidden cinematic-shadow">
+                                <img src="https://images.unsplash.com/photo-1596464716127-f2a82984de30?q=80&w=1000&auto=format&fit=crop" alt="Tre Nứa" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-10">
+                                    <div className="text-white">
+                                        <h3 className="text-3xl font-serif mb-2">Hồn Tre Việt</h3>
+                                        <p className="text-stone-300 text-sm">Biểu tượng của sự kiên cường và đoàn kết</p>
                                     </div>
                                 </div>
-                                <div>
-                                    <span className="text-amber-600 font-bold tracking-widest uppercase text-sm">Cốt Truyện & Ý Nghĩa</span>
-                                    <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 mt-2 mb-6">Huyền Thoại <br/><span className="text-amber-700">Dựng Tháp Ngàn Linh</span></h2>
-                                    <p className="text-lg text-stone-600 mb-6 leading-relaxed">Trò chơi lấy cảm hứng từ hình ảnh "Dựng Tháp" - biểu tượng cho sự kiên trì xây dựng và bảo vệ tổ quốc. Mỗi câu trả lời đúng của bạn chính là một viên gạch vững chắc góp phần xây dựng tòa tháp Di Sản.</p>
-                                    <p className="text-lg text-stone-600 mb-6 leading-relaxed">Khi tòa tháp vươn cao, cũng là lúc ý thức về chủ quyền, văn hóa và lòng tự hào dân tộc trong mỗi người chơi được bồi đắp. Một nền móng vững chãi sẽ tạo nên một đất nước trường tồn.</p>
-                                </div>
                             </div>
-                        </div>
-                    </section>
-
-                    {/* GAME ARENA SECTION */}
-                    <section id="game-arena" className="py-24 px-4 bg-[#FDFBF7] relative border-t border-stone-100">
-                        <div className="max-w-7xl mx-auto relative z-10">
-                            <div className="text-center mb-16">
-                                <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 mb-4">Đấu Trường Di Sản</h2>
-                                <p className="text-stone-500 max-w-2xl mx-auto">Thử thách kiến thức văn hóa của bạn với cơ chế 3 bước: Quay số - Nhận đề bài - Trả lời.</p>
-                            </div>
-                            <GameArena />
-                        </div>
-                    </section>
-
-                    {/* STORE SECTION - Updated Content */}
-                    <section id="store" className="py-24 px-4 bg-[#FDFBF7] relative overflow-hidden border-t border-stone-100">
-                        <div className="absolute -right-40 top-40 w-96 h-96 bg-amber-50 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
-                        <div className="max-w-6xl mx-auto relative z-10">
-                            <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 mb-16 text-center">Cửa Hàng</h2>
-                            
-                            <div className="glass-card rounded-[2.5rem] p-8 md:p-12 shadow-2xl flex flex-col md:flex-row items-center gap-12 max-w-4xl mx-auto bg-gradient-to-br from-white to-amber-50/50">
-                                <div className="md:w-1/2 w-full">
-                                    <div className="aspect-square rounded-3xl bg-stone-100 relative overflow-hidden group shadow-inner">
-                                        <img src="https://images.unsplash.com/photo-1605333396915-47661356db5e?q=80&w=1000&auto=format&fit=crop" alt="Hộp Game" className="w-full h-full object-cover" />
-                                        <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">Best Seller</div>
-                                    </div>
-                                </div>
+                            <div>
+                                <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 mb-6 leading-tight">Cảm Hứng <br/><span className="text-amber-600">Dựng Nước</span></h2>
                                 
-                                <div className="md:w-1/2 w-full text-left">
-                                    <h3 className="text-3xl font-bold text-stone-900 mb-2 font-serif">Bộ Cơ Bản 2025</h3>
-                                    <p className="text-amber-600 font-medium mb-6">Phiên bản Giấy Dó & Tre ép</p>
-                                    
-                                    <div className="text-stone-600 mb-8 leading-relaxed space-y-2">
-                                        <p className="font-bold text-stone-800">Trọn bộ bao gồm:</p>
-                                        <ul className="list-disc list-inside space-y-1 ml-2">
-                                            <li>01 Bộ hình khối</li>
-                                            <li>01 Vòng quay</li>
-                                            <li>37 Thẻ chức năng</li>
-                                            <li>18 Quẻ chủ đề</li>
-                                        </ul>
-                                        <p className="mt-4 pt-4 border-t border-stone-200 italic font-medium text-amber-800">
-                                            "Vật liệu thân thiện môi trường, thiết kế đậm chất VIỆT NAM."
-                                        </p>
-                                    </div>
-                                    
-                                    <div className="flex items-end gap-4 mb-8">
-                                        <span className="text-4xl font-bold text-stone-900">219.000đ</span>
-                                        <span className="text-stone-400 line-through mb-1">299.000đ</span>
-                                    </div>
-                                    
-                                    <button className="w-full bg-stone-900 text-white py-4 rounded-xl font-bold hover:bg-amber-600 transition shadow-xl hover:shadow-amber-900/30 flex items-center justify-center gap-2">
-                                        <Icons.Bag size={20} /> Thêm Vào Giỏ
-                                    </button>
+                                <div className="space-y-6 text-stone-600 text-lg leading-relaxed">
+                                    <p>
+                                        <strong>"Đường Đến Di Sản"</strong> không chỉ là một trò chơi, mà là sự kết tinh của ngàn năm văn hiến. Lấy cảm hứng từ văn hóa <strong>Gieo Quẻ Xin Xăm</strong> đầu năm – một nét đẹp tâm linh thể hiện niềm tin và hy vọng vào những điều tốt đẹp trong tương lai.
+                                    </p>
+                                    <p>
+                                        Chúng tôi chọn <strong>Tre Nứa</strong> làm chất liệu chủ đạo. Cây tre gắn liền với Thánh Gióng đánh giặc, với những lũy tre làng yên bình. Tre mộc mạc nhưng dẻo dai, tượng trưng cho khí phách của con người Việt Nam: "Tre già măng mọc", thế hệ trước ngã xuống, thế hệ sau lại vươn lên tiếp bước.
+                                    </p>
+                                    <p>
+                                        Cơ chế trò chơi xoay quanh việc <strong>"Dựng Tháp"</strong>. Mỗi khối hình bạn thu thập được qua các thử thách kiến thức không chỉ là điểm số, mà là những viên gạch xây dựng nên đất nước. Khi tòa tháp của bạn vươn cao vững chãi, đó cũng là lúc bạn hiểu rằng: Kiến thức về di sản chính là nền móng vững chắc nhất để xây dựng và bảo vệ Tổ quốc.
+                                    </p>
+                                </div>
+
+                                <div className="mt-8 p-6 bg-amber-50 rounded-2xl border border-amber-100 italic text-stone-700">
+                                    "Mỗi nước đi là một bài học lịch sử, mỗi tòa tháp là một lời khẳng định chủ quyền văn hóa."
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    {/* FEEDBACK SECTION - Updated Images */}
-                    <section id="feedback" className="py-20 px-4 bg-white relative">
-                        <div className="max-w-6xl mx-auto">
+                    {/* GAME DEMO (UPDATED SECTION) */}
+                    <section id="game-demo" className="py-24 bg-stone-100 relative">
+                        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                        <div className="max-w-7xl mx-auto px-4 relative z-10">
                             <div className="text-center mb-12">
-                                <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-4">Khách Hàng Nói Gì?</h2>
-                                <div className="w-20 h-1 bg-amber-500 mx-auto rounded-full"></div>
+                                <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900">Trải Nghiệm Ngay</h2>
+                                <p className="text-stone-500 mt-2">Gieo quẻ để nhận chủ đề và số từ chỉ định</p>
                             </div>
+                            <GameDemo />
+                        </div>
+                    </section>
+
+                    {/* CHARACTERS (UPDATED) */}
+                    <section id="characters" className="py-24 bg-white relative">
+                        <div className="max-w-7xl mx-auto px-4 relative z-10">
+                            <CharacterShowcase />
+                        </div>
+                    </section>
+
+                    {/* RULES */}
+                    <section id="rules" className="py-24 px-4 bg-stone-50">
+                         <div className="max-w-7xl mx-auto">
+                            <div className="text-center mb-16">
+                                <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 mb-4">Cách Chơi & Chiến Thắng</h2>
+                                <p className="text-stone-500 max-w-2xl mx-auto">Trò chơi diễn ra trong 10-15 vòng. Mục tiêu là thu thập các khối hình để xây dựng tòa tháp cao nhất và vững chãi nhất.</p>
+                            </div>
+                            <GameRules />
+                        </div>
+                    </section>
+
+                    {/* STORE / COMPONENTS (CENTERED) */}
+                    <section id="store" className="py-24 px-4 bg-gradient-to-b from-white to-amber-50">
+                        <div className="max-w-7xl mx-auto">
+                            <div className="text-center mb-16">
+                                <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 mb-4">Bộ Sản Phẩm</h2>
+                                <p className="text-stone-500">Sở hữu ngay kiệt tác văn hóa này</p>
+                            </div>
+
+                            {/* Center the product card */}
+                            <div className="flex justify-center">
+                                <ProductCard 
+                                    title="Bộ Cơ Bản - Tre Nứa"
+                                    price="219.000 VNĐ"
+                                    image="./sanpham.jpg"
+                                    features={[
+                                        "18 Quẻ chủ đề (Tre tự nhiên)",
+                                        "37 Khối hình xây tháp (Gỗ an toàn)",
+                                        "8 Thẻ nhân vật (In màu sắc nét)",
+                                        "1 Bàn xoay số & may rủi",
+                                        "7 Thẻ bài bốc hình khối"
+                                    ]}
+                                    popular={true}
+                                    onAddToCart={handleAddToCart}
+                                />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* FEEDBACK */}
+                    <section id="feedback" className="py-24 bg-white">
+                        <div className="max-w-7xl mx-auto px-4 text-center">
+                            <h2 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 mb-12">Đánh Giá Từ Cộng Đồng</h2>
                             <Feedback />
                         </div>
                     </section>
+                    
+                    {/* CONTACT + FOOTER (MERGED) */}
+                    <section id="nguoi-giu-lua" className="py-20 bg-white border-t border-stone-200">
+                        <div className="max-w-7xl mx-auto px-4">
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900">
+                                    Người Giữ Lửa
+                                </h2>
+                                <p className="text-stone-500 mt-2">
+                                    Những con người đồng hành xây dựng và lan tỏa giá trị di sản
+                                </p>
+                            </div>
 
-                    {/* TEAM SECTION - With Background */}
-                    <section className="py-20 px-4 bg-[#FDFBF7] border-t border-stone-100 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                        <div className="max-w-4xl mx-auto text-center relative z-10">
-                            <h2 className="text-3xl font-serif font-bold text-stone-900 mb-12">Người Giữ Lửa</h2>
-                            <div className="flex flex-wrap justify-center gap-8 md:gap-12">
-                                {["Nguyễn Bá Tuấn Kiệt", "Bùi Minh Đức", "Phạm Minh Thư", "Đào Nguyên Ngọc Hân", "Nguyễn Lê Thanh Thảo"].map((name, i) => (
-                                    <div key={i} className="flex flex-col items-center group cursor-default">
-                                        <div className="w-20 h-20 bg-white rounded-full mb-3 flex items-center justify-center font-bold text-stone-300 text-xl border border-stone-100 shadow-sm group-hover:border-amber-400 group-hover:text-amber-600 transition duration-300">
-                                            {name.charAt(name.lastIndexOf(" ") + 1)}
-                                        </div>
-                                        <p className="font-bold text-stone-800 text-sm group-hover:text-amber-700 transition">{name}</p>
-                                        <p className="text-[10px] text-stone-400 uppercase font-bold tracking-wider mt-1">Co-Founder</p>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
+                                <div className="bg-stone-50 rounded-2xl p-6 border border-stone-200 shadow-sm hover:shadow-md transition">
+                                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-700 text-xl">
+                                        TT
                                     </div>
-                                ))}
+                                    <p className="font-bold text-stone-800">Thanh Thảo</p>
+                                    <p className="text-xs text-stone-500 mt-1">Co-founder</p>
+                                </div>
+
+                                <div className="bg-stone-50 rounded-2xl p-6 border border-stone-200 shadow-sm hover:shadow-md transition">
+                                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-700 text-xl">
+                                        MD
+                                    </div>
+                                    <p className="font-bold text-stone-800">Minh Đức</p>
+                                    <p className="text-xs text-stone-500 mt-1">Co-founder</p>
+                                </div>
+
+                                <div className="bg-stone-50 rounded-2xl p-6 border border-stone-200 shadow-sm hover:shadow-md transition">
+                                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-700 text-xl">
+                                        TK
+                                    </div>
+                                    <p className="font-bold text-stone-800">Tuấn Kiệt</p>
+                                    <p className="text-xs text-stone-500 mt-1">Co-founder</p>
+                                </div>
+
+                                <div className="bg-stone-50 rounded-2xl p-6 border border-stone-200 shadow-sm hover:shadow-md transition">
+                                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-700 text-xl">
+                                        NH
+                                    </div>
+                                    <p className="font-bold text-stone-800">Ngọc Hân</p>
+                                    <p className="text-xs text-stone-500 mt-1">Co-founder</p>
+                                </div>
+
+                                <div className="bg-stone-50 rounded-2xl p-6 border border-stone-200 shadow-sm hover:shadow-md transition">
+                                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-700 text-xl">
+                                        MT
+                                    </div>
+                                    <p className="font-bold text-stone-800">Minh Thư</p>
+                                    <p className="text-xs text-stone-500 mt-1">Co-founder</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="contact" className="pt-24 bg-stone-900 text-stone-300">
+                        <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-16 items-start">
+                            {/* LEFT: CONTACT INFO */}
+                            <div>
+                                <h2 className="text-4xl font-serif font-bold text-white mb-6">Liên Hệ Hợp Tác</h2>
+                                <p className="text-stone-400 mb-10 leading-relaxed">
+                                    Bạn là trường học, tổ chức giáo dục hay đơn giản là muốn lan tỏa văn hóa Việt?
+                                    Hãy liên hệ với chúng tôi để nhận được chính sách ưu đãi tốt nhất.
+                                </p>
+
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-stone-800 rounded-full flex items-center justify-center text-amber-500">
+                                            <Icons.Map />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-white">Địa chỉ</p>
+                                            <p className="text-sm text-stone-400">THPT Nguyễn Hữu Cầu</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-stone-800 rounded-full flex items-center justify-center text-amber-500">
+                                            <Icons.Send />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-white">Email</p>
+                                            <p className="text-sm text-stone-400">chapdien2025@gmail.com</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* RIGHT: CONTACT FORM */}
+                            <div className="bg-stone-800 p-10 rounded-3xl shadow-2xl border border-stone-700">
+                                <h3 className="text-2xl font-serif font-bold text-white mb-6">Liên Hệ Với Chúng Tôi</h3>
+                                <form className="space-y-4">
+                                    <input type="text" placeholder="Họ và Tên" className="w-full p-3 rounded-xl bg-stone-900 border border-stone-700 focus:border-amber-500 focus:outline-none text-white" />
+                                    <input type="tel" placeholder="Số Điện Thoại" className="w-full p-3 rounded-xl bg-stone-900 border border-stone-700 focus:border-amber-500 focus:outline-none text-white" />
+                                    <textarea rows="4" placeholder="Lời Nhắn" className="w-full p-3 rounded-xl bg-stone-900 border border-stone-700 focus:border-amber-500 focus:outline-none text-white"></textarea>
+                                    <button className="w-full bg-amber-600 text-white font-bold py-3 rounded-xl hover:bg-amber-700 transition shadow-lg">
+                                        Gửi Tin Nhắn
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {/* FOOTER NAV */}
+                        <div className="max-w-7xl mx-auto px-4 mt-24 border-t border-stone-800 pt-16">
+                            <div className="grid md:grid-cols-4 gap-12 mb-12">
+                                <div className="col-span-1 md:col-span-2">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="bg-amber-600 p-2 rounded-lg">
+                                            <Icons.Map className="text-white" />
+                                        </div>
+                                        <span className="text-2xl font-bold font-serif text-white">Đường Đến Di Sản</span>
+                                    </div>
+                                    <p className="max-w-sm text-stone-400">
+                                        Dựng Tháp - Dựng Nước. Hành trình kết nối thế hệ qua từng nước đi.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-white font-bold mb-6">Về Chúng Tôi</h4>
+                                    <ul className="space-y-3">
+                                        <li><button onClick={() => scroll('story')} className="hover:text-amber-500">Câu chuyện</button></li>
+                                        <li><button onClick={() => scroll('characters')} className="hover:text-amber-500">Nhân vật</button></li>
+                                        <li><button onClick={() => scroll('store')} className="hover:text-amber-500">Cửa hàng</button></li>
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-white font-bold mb-6">Hỗ Trợ</h4>
+                                    <ul className="space-y-3">
+                                        <li>Chính sách đổi trả</li>
+                                        <li>Hướng dẫn luật chơi</li>
+                                        <li>Câu hỏi thường gặp</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-stone-800 pt-8 text-center text-sm text-stone-500">
+                                © 2025 Đường Đến Di Sản. All rights reserved.
                             </div>
                         </div>
                     </section>
 
-                    {/* CONTACT (Giữ nguyên) */}
-                    <footer id="contact" className="bg-[#1c1917] text-stone-400 py-16 px-4 border-t border-stone-800">
-                        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16">
-                            <div>
-                                <h2 className="text-3xl font-serif font-bold text-white mb-6 flex items-center gap-3"><Icons.Map className="text-amber-600" /> <span>Đường Đến Di Sản</span></h2>
-                                <p className="mb-8 max-w-sm text-stone-400 leading-relaxed">Chúng tôi tin rằng văn hóa là dòng chảy bất tận. Hãy cùng chúng tôi khơi thông dòng chảy đó qua từng ván game đầy cảm xúc.</p>
-                                <ul className="space-y-4 text-base">
-                                    <li className="flex items-start gap-4 p-4 bg-stone-800/50 rounded-xl border border-stone-800 hover:border-amber-900/50 transition">
-                                        <div className="bg-stone-900 p-2 rounded-lg text-amber-500"><Icons.Phone size={20} /></div>
-                                        <div><strong className="text-white block">Hotline Hỗ Trợ</strong><span className="text-stone-400">0986 068 936</span></div>
-                                    </li>
-                                    <li className="flex items-start gap-4 p-4 bg-stone-800/50 rounded-xl border border-stone-800 hover:border-amber-900/50 transition">
-                                        <div className="bg-stone-900 p-2 rounded-lg text-amber-500"><Icons.Mail size={20} /></div>
-                                        <div><strong className="text-white block">Email Liên Hệ</strong><span className="text-stone-400">chapdien@gmail.com</span></div>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div className="bg-stone-900 p-8 rounded-3xl border border-stone-800 shadow-2xl">
-                                <h3 className="text-xl font-bold text-white mb-6 font-serif">Gửi Tin Nhắn</h3>
-                                <form className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-stone-500 ml-1">Họ tên</label>
-                                            <div className="relative"><Icons.User className="absolute left-3 top-3 text-stone-600" size={18} /><input type="text" className="w-full bg-stone-950 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-white focus:border-amber-600 focus:outline-none transition" placeholder="Tên của bạn" /></div>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-stone-500 ml-1">Email</label>
-                                            <div className="relative"><Icons.Mail className="absolute left-3 top-3 text-stone-600" size={18} /><input type="email" className="w-full bg-stone-950 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-white focus:border-amber-600 focus:outline-none transition" placeholder="email@vidu.com" /></div>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-stone-500 ml-1">Nội dung</label>
-                                        <textarea rows="4" className="w-full bg-stone-950 border border-stone-800 rounded-xl p-4 text-white focus:border-amber-600 focus:outline-none transition" placeholder="Bạn cần hỗ trợ gì..."></textarea>
-                                    </div>
-                                    <button type="submit" className="w-full bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-amber-900/20 mt-2">Gửi Tin Nhắn</button>
-                                </form>
-                            </div>
-                        </div>
-                        <div className="border-t border-stone-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-stone-600">
-                            <p>&copy; 2025 Đường Đến Di Sản. All rights reserved.</p>
-                            <div className="flex gap-6 mt-4 md:mt-0"><a href="#" className="hover:text-amber-600 transition">Điều khoản</a><a href="#" className="hover:text-amber-600 transition">Bảo mật</a><a href="#" className="hover:text-amber-600 transition">Hợp tác</a></div>
-                        </div>
-                    </footer>
                 </div>
             );
         };
 
-        window.onload = () => {
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(<App />);
-        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>

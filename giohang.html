@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Thanh Toán và Đặt Hàng</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Định nghĩa font và màu nền chung */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+        }
+        /* Shadow nhẹ nhàng, chuyên nghiệp */
+        .shadow-custom {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        /* Hiệu ứng khi chọn phương thức thanh toán */
+        .radio-group input[type="radio"]:checked + label {
+            border-color: #ef4444; /* Màu đỏ nổi bật khi chọn */
+            background-color: #fee2e2; /* Nền nhạt khi chọn */
+            font-weight: 600; /* In đậm nội dung khi chọn */
+        }
+        /* Thay đổi màu dấu check (dấu chấm nhỏ) */
+        .radio-group input[type="radio"]:checked + label span:first-child {
+            background-color: #ef4444;
+            border-color: #ef4444;
+            position: relative;
+        }
+        /* Tạo dấu chấm trắng bên trong khi radio được chọn */
+        .radio-group input[type="radio"]:checked + label span:first-child:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: white;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-red-600 mb-6 text-center">Xác Nhận Đặt Hàng</h1>
+        <div class="text-center mb-6">
+            <a href="trangchu.html" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-red-600 transition">
+                ← Quay về trang chủ
+            </a>
+        </div>
+
+        <div id="alert-box" class="hidden p-4 mb-4 text-sm rounded-lg" role="alert"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Cột 1: Thông tin người nhận và Thanh toán -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- 1. Địa chỉ và Liên hệ -->
+                <div class="bg-white p-6 rounded-xl shadow-custom border-l-4 border-red-500">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Địa Chỉ Giao Hàng & Liên Hệ
+                    </h2>
+                    <form id="checkoutForm">
+                        <div class="mb-4">
+                            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Họ tên người nhận <span class="text-red-500">*</span></label>
+                            <input type="text" id="fullName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Nguyễn Văn A" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại liên hệ <span class="text-red-500">*</span></label>
+                            <input type="tel" id="phoneNumber" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="090 123 4567" pattern="[0-9]{10,11}" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Địa chỉ nhận hàng chi tiết <span class="text-red-500">*</span></label>
+                            <textarea id="address" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Số nhà, tên đường, Phường/Xã, Quận/Huyện, Tỉnh/Thành phố" required></textarea>
+                        </div>
+                        
+                        <!-- 2. Phương thức Thanh toán -->
+                        <h3 class="text-lg font-semibold text-gray-800 mt-6 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                            Phương Thức Thanh Toán <span class="text-red-500">*</span>
+                        </h3>
+                        <!-- radio-group được dùng để áp dụng styling cho radio button -->
+                        <div class="space-y-3 radio-group">
+                            <div class="relative">
+                                <input type="radio" id="cod" name="paymentMethod" value="Thanh toán khi nhận hàng (COD)" class="hidden" required>
+                                <label for="cod" class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer transition duration-200 hover:border-red-400">
+                                    <span class="w-4 h-4 inline-block mr-3 rounded-full border border-gray-400 flex-shrink-0"></span>
+                                    <span class="font-medium text-gray-700">Thanh toán khi nhận hàng (COD)</span>
+                                    <span class="ml-auto text-sm text-red-500 font-semibold bg-red-100 px-2 py-0.5 rounded-full">Phổ biến</span>
+                                </label>
+                            </div>
+
+                            <div class="relative">
+                                <input type="radio" id="bankTransfer" name="paymentMethod" value="Chuyển khoản ngân hàng" class="hidden">
+                                <label for="bankTransfer" class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer transition duration-200 hover:border-red-400">
+                                    <span class="w-4 h-4 inline-block mr-3 rounded-full border border-gray-400 flex-shrink-0"></span>
+                                    <span class="font-medium text-gray-700">Chuyển khoản ngân hàng</span>
+                                </label>
+                            </div>
+                            
+                            <div class="relative">
+                                <input type="radio" id="eWallet" name="paymentMethod" value="Ví điện tử (Momo, ZaloPay, etc.)" class="hidden">
+                                <label for="eWallet" class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer transition duration-200 hover:border-red-400">
+                                    <span class="w-4 h-4 inline-block mr-3 rounded-full border border-gray-400 flex-shrink-0"></span>
+                                    <span class="font-medium text-gray-700">Ví điện tử (Momo, ZaloPay, v.v.)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Cột 2: Tóm tắt đơn hàng và Đặt hàng -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-8 bg-white p-6 rounded-xl shadow-custom border-t-4 border-red-500">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Tóm Tắt Đơn Hàng</h2>
+
+                    <!-- Danh sách sản phẩm được render bằng JS từ dữ liệu giỏ hàng -->
+                    <div id="cart-summary-list" class="space-y-3 pb-4 text-sm">
+                        <!-- Sản phẩm sẽ được hiển thị ở đây -->
+                        <p class="text-center text-gray-500">Đang tải chi tiết giỏ hàng...</p>
+                    </div>
+
+                    <!-- Tổng tiền hàng (Subtotal) -->
+                    <div class="flex justify-between font-medium text-gray-800 pt-2 border-t border-dashed border-gray-200">
+                        <span>Tổng tiền hàng</span>
+                        <span id="subtotal-amount">0₫</span>
+                    </div>
+
+                    <!-- Phí vận chuyển và Giảm giá -->
+                    <div class="space-y-3 border-b pb-4 mb-4 text-sm mt-3">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Phí vận chuyển</span>
+                            <span id="shipping-amount">0₫</span>
+                        </div>
+                        <div class="flex justify-between text-green-600 font-medium">
+                            <span>Mã giảm giá</span>
+                            <span id="discount-amount">-0₫</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Tổng cộng -->
+                    <div class="flex justify-between items-center text-2xl font-bold text-gray-900 mb-6">
+                        <span>Tổng Thanh Toán</span>
+                        <span id="total-payment-amount" class="text-red-600">0₫</span>
+                    </div>
+
+                    <!-- Nút Đặt Hàng -->
+                    <button id="place-order-button" onclick="placeOrder()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition duration-300 transform hover:scale-[1.01] shadow-lg shadow-red-300">
+                        ĐẶT HÀNG
+                    </button>
+                    <p class="text-xs text-gray-500 mt-3 text-center">Bằng cách nhấp vào "Đặt Hàng", bạn đồng ý với Điều khoản & Dịch vụ của chúng tôi.</p>
+
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // --- Dữ liệu Giỏ Hàng đọc từ localStorage ---
+        function getCartItems() {
+            try {
+                return JSON.parse(localStorage.getItem('cart') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        const SHIPPING_FEE = 30000;
+        const DISCOUNT = 50000; // Giả sử mã giảm giá 50.000₫
+
+        const alertBox = document.getElementById('alert-box');
+        const checkoutForm = document.getElementById('checkoutForm');
+
+        // Hàm định dạng tiền tệ sang VND
+        function formatCurrency(amount) {
+            // Đảm bảo số không âm
+            const absAmount = Math.abs(amount);
+            return absAmount.toLocaleString('vi-VN') + '₫';
+        }
+
+        // Hàm tính toán tổng tiền
+        function calculateTotals() {
+            const items = getCartItems();
+            const subtotal = items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
+            const totalPayment = subtotal + SHIPPING_FEE - DISCOUNT;
+            return { subtotal, totalPayment };
+        }
+
+        // Hàm hiển thị chi tiết giỏ hàng và tổng tiền
+        function renderCartSummary() {
+            const listContainer = document.getElementById('cart-summary-list');
+            const subtotalElement = document.getElementById('subtotal-amount');
+            const shippingElement = document.getElementById('shipping-amount');
+            const discountElement = document.getElementById('discount-amount');
+            const totalPaymentElement = document.getElementById('total-payment-amount');
+            const placeOrderButton = document.getElementById('place-order-button');
+            
+            // Tính toán tổng tiền
+            const { subtotal, totalPayment } = calculateTotals();
+
+            // 1. Render danh sách sản phẩm
+            const currentCart = getCartItems();
+            if (!currentCart || currentCart.length === 0) {
+                 listContainer.innerHTML = '<p class="text-center text-gray-500">Giỏ hàng trống.</p>';
+            } else {
+                listContainer.innerHTML = currentCart.map(item => `
+                    <div class="flex justify-between text-gray-700">
+                        <!-- Tên sản phẩm và số lượng -->
+                        <span class="truncate pr-2">${item.name} (x${item.quantity})</span> 
+                        <!-- Tổng tiền của từng món -->
+                        <span class="font-medium flex-shrink-0">${formatCurrency(Number(item.price) * Number(item.quantity))}</span>
+                    </div>
+                `).join('');
+            }
+            
+            // 2. Render các khoản tổng phụ
+            subtotalElement.textContent = formatCurrency(subtotal);
+            shippingElement.textContent = formatCurrency(SHIPPING_FEE);
+            discountElement.textContent = '-' + formatCurrency(DISCOUNT); // Hiển thị dấu trừ
+
+            // 3. Render Tổng Thanh Toán cuối cùng
+            totalPaymentElement.textContent = formatCurrency(totalPayment);
+
+            // 4. Cập nhật nút Đặt hàng
+            placeOrderButton.textContent = `ĐẶT HÀNG (${formatCurrency(totalPayment)})`;
+        }
+
+
+        // Hàm hiển thị thông báo
+        function showAlert(message, type = 'success') {
+            const baseClasses = 'p-4 mb-4 text-sm rounded-lg';
+            
+            // Xóa các class cũ và ẩn
+            alertBox.className = baseClasses + ' hidden'; 
+            
+            if (type === 'success') {
+                alertBox.classList.add('bg-green-100', 'text-green-800', 'border-2', 'border-green-300');
+            } else if (type === 'error') {
+                alertBox.classList.add('bg-red-100', 'text-red-800', 'border-2', 'border-red-300');
+            } else { // info
+                alertBox.classList.add('bg-blue-100', 'text-blue-800', 'border-2', 'border-blue-300');
+            }
+            
+            alertBox.innerHTML = message;
+            alertBox.classList.remove('hidden');
+            
+            // Tự động ẩn sau 5 giây
+            setTimeout(() => {
+                alertBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Hàm xử lý đặt hàng
+        function placeOrder() {
+            // Kiểm tra các trường bắt buộc
+            if (!checkoutForm.checkValidity()) {
+                showAlert('Vui lòng điền đầy đủ và chính xác tất cả các thông tin bắt buộc (*).', 'error');
+                // Kích hoạt việc hiển thị lỗi HTML5 mặc định (tooltip)
+                checkoutForm.reportValidity();
+                return;
+            }
+
+            // Lấy dữ liệu từ form và tính toán
+            const fullName = document.getElementById('fullName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const address = document.getElementById('address').value;
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'Chưa chọn';
+            const { totalPayment } = calculateTotals();
+            const cartNow = getCartItems();
+
+            // Mô phỏng quá trình xử lý đơn hàng
+            const orderDetails = {
+                TenNguoiNhan: fullName,
+                SoDienThoai: phoneNumber,
+                DiaChi: address,
+                PhuongThucThanhToan: paymentMethod,
+                TongThanhToan: formatCurrency(totalPayment),
+                ChiTietSanPham: cartNow,
+                NgayDatHang: new Date().toLocaleString('vi-VN')
+            };
+
+            console.log("Chi tiết đơn hàng đã đặt:", orderDetails);
+
+            // Hiển thị thông báo thành công
+            const successMessage = `
+                <h4 class="font-bold">ĐẶT HÀNG THÀNH CÔNG!</h4>
+                <p>Đơn hàng <b>${formatCurrency(totalPayment)}</b> của bạn đã được tiếp nhận.</p>
+                <p class="mt-2 text-xs">Chúng tôi sẽ liên hệ qua SĐT <b>${phoneNumber}</b> để xác nhận.</p>
+                <p class="text-xs mt-2">Cảm ơn bạn đã tin tưởng mua sắm!</p>
+            `;
+            showAlert(successMessage, 'success');
+            
+            // Sau khi đặt hàng thành công, có thể reset form
+            // checkoutForm.reset();
+        }
+
+        // Sự kiện chạy khi tải trang hoàn tất
+        window.onload = renderCartSummary;
+    </script>
+</body>
+</html>
